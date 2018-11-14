@@ -1,0 +1,32 @@
+[
+    {
+      "firstName": "Acosta",
+      "lastName": "Turner",
+      "emailAddress": "acostaturner@ultrasure.com",
+      "password": "password"
+    },
+    {
+      "firstName": "Mona",
+      "lastName": "Oliver",
+      "emailAddress": "monaoliver@ultrasure.com",
+      "password": "password"
+    },
+    {
+      "firstName": "Love",
+      "lastName": "Cortez",
+      "emailAddress": "lovecortez@ultrasure.com",
+      "password": "password"
+    },
+    {
+      "firstName": "Morse",
+      "lastName": "Burch",
+      "emailAddress": "morseburch@ultrasure.com",
+      "password": "password"
+    },
+    {
+      "firstName": "Goodman",
+      "lastName": "Wise",
+      "emailAddress": "goodmanwise@ultrasure.com",
+      "password": "password"
+    }
+  ]
