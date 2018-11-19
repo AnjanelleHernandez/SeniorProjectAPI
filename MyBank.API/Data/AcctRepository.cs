@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using MyBank.API.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace MyBank.API.Data
 {
@@ -30,11 +31,17 @@ namespace MyBank.API.Data
             return true;
         }
 
-        public async Task<Account> CreateAccount(Account newAccount, int currentUser)
+        public async Task<Account> CreateAccount(Account newAccount)
         {
-            newAccount.userID = currentUser;
             await _context.Accounts.AddAsync(newAccount);
             return newAccount;
         }
+
+        public async Task<IEnumerable<Account>> GetAccounts(int currentUser)
+        {
+            var accounts = await _context.Accounts.Include(c => c.userID == currentUser).ToListAsync();
+            return accounts;
+        }
     }
+
 }
