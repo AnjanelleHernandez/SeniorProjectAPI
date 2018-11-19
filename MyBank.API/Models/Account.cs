@@ -8,11 +8,11 @@ namespace MyBank.API.Models
         public int accountID { get; set; }
         public string accountName { get; set; }
         public decimal accountTotal { get; set; }
-
+        public decimal accountPercent { get; set; }
         //foreign key to User Table
         public User User { get; set; }
         public int userID { get; set; }
-
+        
         public ICollection<TransactionHistory> TransactionHistory { get; set; }
     }
 }
