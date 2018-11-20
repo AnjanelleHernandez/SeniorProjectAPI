@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,22 +23,37 @@ namespace MyBank.API.Controllers
             _repo = repo;
         }
 
-        [HttpGet]
+        [HttpGet("{userID}")]
         public async Task<IActionResult> GetAccounts(int userID)
         {
-            var accounts = await _repo.GetAccounts(userID);
-            return Ok(accounts);
+            var identity = User.FindFirst(ClaimTypes.NameIdentifier);
+            var claimsID = identity.Value;
+            if(userID != int.Parse(claimsID))
+            {
+                return Unauthorized();
+            }
+            var accounts = await _repo.GetAccounts(int.Parse(claimsID));
+            if(accounts == null)
+            {
+                return BadRequest("No accounts associated with this ID");
+            }
+            else
+            {
+                return Ok(accounts);
+            }
         }
 
         [HttpPost("create-account")]
-        public async Task<IActionResult> CreateAccount(AccountForRegisterDto newAccount, int currentUser)
+        public async Task<IActionResult> CreateAccount(AccountForRegisterDto newAccount)
         {
+            var identity = User.FindFirst(ClaimTypes.NameIdentifier);
+            var claimsID = identity.Value;
             var accountToCreate = new Account
             {
                 accountName = newAccount.accountName,
                 accountTotal = newAccount.accountTotal,
                 accountPercent = 1,
-                userID = currentUser
+                userID = int.Parse(claimsID)
 
             };
             

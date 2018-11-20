@@ -57,12 +57,12 @@ namespace MyBank.API
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                seeder.SeedUsers();
             }
             else
             {
                 //app.UseHsts();
-            }
-            seeder.SeedUsers();
+            } 
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             // app.UseHttpsRedirection();
             app.UseAuthentication();

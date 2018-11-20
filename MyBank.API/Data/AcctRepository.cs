@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using MyBank.API.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MyBank.API.Data
 {
@@ -34,12 +35,13 @@ namespace MyBank.API.Data
         public async Task<Account> CreateAccount(Account newAccount)
         {
             await _context.Accounts.AddAsync(newAccount);
+            await _context.SaveChangesAsync();
             return newAccount;
         }
 
         public async Task<IEnumerable<Account>> GetAccounts(int currentUser)
         {
-            var accounts = await _context.Accounts.Include(c => c.userID == currentUser).ToListAsync();
+            var accounts = await _context.Accounts.Where(c => c.userID == currentUser).ToListAsync();
             return accounts;
         }
     }
