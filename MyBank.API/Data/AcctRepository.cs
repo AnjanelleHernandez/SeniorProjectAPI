@@ -4,6 +4,8 @@ using MyBank.API.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Collections;
+using System.Security.Claims;
 
 namespace MyBank.API.Data
 {
@@ -16,14 +18,18 @@ namespace MyBank.API.Data
             _context = context;
         }
 
-        public async Task<bool> UpdatePercentage(int accountID, decimal percentage)
+        public async Task<bool> UpdatePercentage(int accountID, decimal requestedPercentage)
         {
-            var account = await _context.Accounts.FirstOrDefaultAsync(x => x.accountID == accountID);
-            decimal newPercentage = account.accountPercent - (percentage / (decimal)100);
-            if(newPercentage < 0)
+        //find the account with the account ID to make the changes.
+            Account account = await FindAccount(accountID);
+        //calculate the new percentage with the account's current percent - the requested percentage
+            decimal newPercentage = account.accountPercent - (requestedPercentage / (decimal)100);
+        //check that the new percentage is <= 0.
+            if(newPercentage < 0) 
             {
                 return false;
             }
+        //update the account percent if new percentage is >= 0;
             else
             {
                 account.accountPercent = newPercentage;
@@ -43,6 +49,20 @@ namespace MyBank.API.Data
         {
             var accounts = await _context.Accounts.Where(c => c.userID == currentUser).ToListAsync();
             return accounts;
+        }
+
+
+        public async Task<Account> FindAccount(int accountID)
+        {
+            var accountFound = await _context.Accounts.FirstOrDefaultAsync(x => x.accountID == accountID);
+            return accountFound;
+        }
+
+        public async Task<PercentageBreakdown> CreatePercentageBreakdown(PercentageBreakdown newPercentageBreakdown)
+        {
+            await _context.PercentageBreakdowns.AddAsync(newPercentageBreakdown);
+            await _context.SaveChangesAsync();
+            return newPercentageBreakdown;
         }
     }
 

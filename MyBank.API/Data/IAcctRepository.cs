@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MyBank.API.Models;
@@ -9,6 +10,7 @@ namespace MyBank.API.Data
         Task<Account> CreateAccount(Account newAccount); 
         Task<bool> UpdatePercentage(int accountID, decimal percentage);
         Task<IEnumerable<Account>> GetAccounts(int currentUser);
-
+        Task<Account> FindAccount(int accountID);
+        Task<PercentageBreakdown> CreatePercentageBreakdown(PercentageBreakdown newPercentageBreakdown);
     }
 }
