@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -43,6 +44,54 @@ namespace MyBank.API.Controllers
             }
         }
 
+        [HttpGet("get-percentage-breakdowns")]
+        public async Task<IActionResult> GetPercentageBreakdowns(GetPercentageDto percent)
+        {
+        //check that the user is authorized to view these percentage breakdowns
+            var foundAccount = await _repo.FindAccount(percent.accountID);
+            var identity = User.FindFirst(ClaimTypes.NameIdentifier);
+            if(identity == null)
+            {
+                return NotFound();
+            }
+            var claimsID = identity.Value;
+            if(foundAccount.userID != int.Parse(claimsID))
+            {
+                return Unauthorized();
+            }
+        //get the percentage breakdowns
+            var percentageBreakdowns = await _repo.GetPercentageBreakdowns(percent.accountID);
+            if(percentageBreakdowns == null)
+            {
+                return BadRequest("No percentage breakdowns for this account.");
+            }
+            return Ok(percentageBreakdowns);
+        }
+
+        [HttpGet("get-transaction-history")]
+        public async Task<IActionResult> GetTransactionHistory(GetHistoryDto history)
+        {
+        //check that the user is authorized to view these histories
+            var foundAccount = await _repo.FindAccount(history.accountID);
+            var identity = User.FindFirst(ClaimTypes.NameIdentifier);
+            if(identity == null)
+            {
+                return NotFound();
+            }
+            var claimsID = identity.Value;
+            if(foundAccount.userID != int.Parse(claimsID))
+            {
+                return Unauthorized();
+            }
+        //get the account histories
+            var histories = await _repo.GetTransactionHistories(history.accountID);
+            if(histories == null)
+            {
+                return BadRequest("No transaction histories for this account.");
+            }
+            return Ok(histories);
+        }
+
         [HttpPost("create-account")]
         public async Task<IActionResult> CreateAccount(AccountForRegisterDto newAccount)
         {
@@ -86,14 +135,14 @@ namespace MyBank.API.Controllers
                 return Unauthorized();
             }
         //attempt to update the account's percentage
-            if(! await _repo.UpdatePercentage(newPercentage.accountID, newPercentage.percentageAmount))
+            if(! await _repo.UpdateAccountPercentage(newPercentage.accountID, newPercentage.percentageAmount))
             {
                 return BadRequest("Requested Percentage greater than the percentage remaining on this account.");
             }
         //if account's percentage can be updated, add newPercent to the table. 
             else
             {
-                decimal newPercentageTotal = foundAccount.accountTotal * newPercentage.percentageAmount;
+                decimal newPercentageTotal = foundAccount.accountTotal * (newPercentage.percentageAmount/100);
                 var newPercent = new PercentageBreakdown
                 {
                     accountID = newPercentage.accountID,
@@ -104,6 +153,124 @@ namespace MyBank.API.Controllers
                 await _repo.CreatePercentageBreakdown(newPercent);
             }
             return Ok(201);
+        }
+
+        [HttpPost("add-funds")]
+        public async Task<IActionResult> AddFunds(AddFundsToAccountDto fundsToAdd)
+        {
+        //make sure the account that the user is attempting to alter belongs to that user.
+            var foundAccount = await _repo.FindAccount(fundsToAdd.accountID);
+            var identity = User.FindFirst(ClaimTypes.NameIdentifier);
+            if(identity == null)
+            {
+                return NotFound();
+            }
+            var claimsID = identity.Value;
+            if(foundAccount.userID != int.Parse(claimsID))
+            {
+                return Unauthorized();
+            }
+        //update the account total
+            decimal newTotal = await _repo.AddToAccountTotal(fundsToAdd.accountID, fundsToAdd.amountToBeAdded);
+        //recalculate the percentages
+            await _repo.UpdatePercentageBreakdowns(fundsToAdd.accountID, newTotal);
+        //create transaction history
+            var newTransactionHistory = new TransactionHistory
+            {
+                transactionDateTime = DateTime.Now,
+                transactionType = fundsToAdd.transactionType,
+                TransactionDetail = fundsToAdd.transactionDetail,
+                accountID = fundsToAdd.accountID
+            };
+            await _repo.CreateHistory(newTransactionHistory);
+            return Ok(200);
+        }
+
+        [HttpPost("remove-funds")]
+        public async Task<IActionResult> RemoveFunds(RemoveFundsFromAccountDto fundsToBeRemoved)
+        {
+        //make sure the account that the user is attempting to alter belongs to that user.
+            var foundAccount = await _repo.FindAccount(fundsToBeRemoved.accountID);
+            var identity = User.FindFirst(ClaimTypes.NameIdentifier);
+            decimal newTotal = 0.00m;
+            if(identity == null)
+            {
+                return NotFound();
+            }
+            var claimsID = identity.Value;
+            if(foundAccount.userID != int.Parse(claimsID))
+            {
+                return Unauthorized();
+            }
+        //check if the funds are to be removed from the total, or from a certain percentage.
+            if(fundsToBeRemoved.percentageID == 0)
+            {
+            //the amount is to be removed from the grand total
+                newTotal = await _repo.RemoveFromAccountTotal(fundsToBeRemoved.accountID, fundsToBeRemoved.amountToBeRemoved);
+                await _repo.UpdatePercentageBreakdowns(fundsToBeRemoved.accountID, newTotal);
+            }
+            else
+            {
+            //The amount is to be removed from the percentage
+            //remove the amount from the single percentage breakdown
+                await _repo.RemoveFundsFromSinglePercentageBreakdown(fundsToBeRemoved.percentageID, fundsToBeRemoved.amountToBeRemoved);
+                newTotal = await _repo.RemoveFromAccountTotal(fundsToBeRemoved.accountID, fundsToBeRemoved.amountToBeRemoved);
+            }
+        //create transaction history
+            var newTransactionHistory = new TransactionHistory
+            {
+                transactionDateTime = DateTime.Now,
+                transactionType = fundsToBeRemoved.transactionType,
+                TransactionDetail = fundsToBeRemoved.transactionDetail,
+                accountID = fundsToBeRemoved.accountID
+            };
+            await _repo.CreateHistory(newTransactionHistory);
+            return Ok(200);
+        }
+
+        [HttpDelete("delete-account")]
+        public async Task<IActionResult> DeleteAccount(AccountToDeleteDto deleteAccount)
+        {
+        //make sure the account that the user is attempting to alter belongs to that user.
+            var foundAccount = await _repo.FindAccount(deleteAccount.accountID);
+            var identity = User.FindFirst(ClaimTypes.NameIdentifier);
+            if(identity == null)
+            {
+                return NotFound();
+            }
+            var claimsID = identity.Value;
+            if(foundAccount.userID != int.Parse(claimsID))
+            {
+                return Unauthorized();
+            }
+        //delete the account
+            await _repo.DeleteAccount(deleteAccount.accountID);
+        //delete the percentage breakdowns associated with that account
+            await _repo.DeletePercentageBreakdowns(deleteAccount.accountID);
+        //delete transaction histories associated with that account
+            await _repo.DeleteTransactionHistory(deleteAccount.accountID);
+            return Ok(200);
+        }
+
+        [HttpDelete("delete-single-percentage")]
+        public async Task<IActionResult> DeleteSinglePercentage(DeletePercentageDto percentageToDelete)
+        {
+        //make sure the account that the user is attempting to alter belongs to that user.
+            var foundPercent = await _repo.FindPercentBreakdown(percentageToDelete.percentID);
+            var foundAccount = await _repo.FindAccount(foundPercent.accountID);
+            var identity = User.FindFirst(ClaimTypes.NameIdentifier);
+            if(identity == null)
+            {
+                return NotFound();
+            }
+            var claimsID = identity.Value;
+            if(foundAccount.userID != int.Parse(claimsID))
+            {
+                return Unauthorized();
+            }
+        //delete the requested percentage
+            await _repo.DeletePercentageBreakdowns(percentageToDelete.percentID);
+            return Ok(200);
         }
     }
 }

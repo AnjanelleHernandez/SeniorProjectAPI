@@ -12,7 +12,7 @@ namespace MyBank.API.Models
         //foreign key to User Table
         public User User { get; set; }
         public int userID { get; set; }
-        
+        public ICollection<PercentageBreakdown> PercentageBreakdown { get; set; }
         public ICollection<TransactionHistory> TransactionHistory { get; set; }
     }
 }

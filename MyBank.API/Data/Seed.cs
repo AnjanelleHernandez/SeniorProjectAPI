@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using MyBank.API.Models;
 using Newtonsoft.Json;
 
@@ -15,17 +16,20 @@ namespace MyBank.API.Data
 
         public void SeedUsers()
         {
-            var userData = System.IO.File.ReadAllText("Data/UserSeedFile.json");
-            var users = JsonConvert.DeserializeObject<List<User>>(userData);
-            foreach (var user in users)
+            if(_context.Users.ToList().Count == 0)
             {
-                byte[] passwordHash, passwordSalt;
-                CreatePasswordHash("password", out passwordHash, out passwordSalt);
-                user.passwordHash = passwordHash;
-                user.passwordSalt = passwordSalt;
-                _context.Users.Add(user);
+                var userData = System.IO.File.ReadAllText("Data/UserSeedFile.json");
+                var users = JsonConvert.DeserializeObject<List<User>>(userData);
+                foreach (var user in users)
+                {
+                    byte[] passwordHash, passwordSalt;
+                    CreatePasswordHash("password", out passwordHash, out passwordSalt);
+                    user.passwordHash = passwordHash;
+                    user.passwordSalt = passwordSalt;
+                    _context.Users.Add(user);
+                }
+                _context.SaveChangesAsync();
             }
-            _context.SaveChanges();
         }
 
         private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)

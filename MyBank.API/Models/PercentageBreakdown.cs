@@ -12,7 +12,5 @@ namespace MyBank.API.Models
         public decimal PercentageTotal { get; set; }
         public Account AccountAssociated { get; set; }
         public int accountID { get; set; }
-
-        public ICollection<Account> Account { get; set; }
     }
 }

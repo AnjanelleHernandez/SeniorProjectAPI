@@ -9,8 +9,8 @@ using MyBank.API.Data;
 namespace MyBank.API.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20181123184229_percentageBreakdown")]
-    partial class percentageBreakdown
+    [Migration("20181123203351_initialcommit")]
+    partial class initialcommit
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,8 +23,6 @@ namespace MyBank.API.Migrations
                     b.Property<int>("accountID")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int?>("PercentageBreakdownID");
-
                     b.Property<string>("accountName");
 
                     b.Property<decimal>("accountPercent");
@@ -34,8 +32,6 @@ namespace MyBank.API.Migrations
                     b.Property<int>("userID");
 
                     b.HasKey("accountID");
-
-                    b.HasIndex("PercentageBreakdownID");
 
                     b.HasIndex("userID");
 
@@ -116,10 +112,6 @@ namespace MyBank.API.Migrations
 
             modelBuilder.Entity("MyBank.API.Models.Account", b =>
                 {
-                    b.HasOne("MyBank.API.Models.PercentageBreakdown")
-                        .WithMany("Account")
-                        .HasForeignKey("PercentageBreakdownID");
-
                     b.HasOne("MyBank.API.Models.User", "User")
                         .WithMany("Accounts")
                         .HasForeignKey("userID")
@@ -129,7 +121,7 @@ namespace MyBank.API.Migrations
             modelBuilder.Entity("MyBank.API.Models.PercentageBreakdown", b =>
                 {
                     b.HasOne("MyBank.API.Models.Account", "AccountAssociated")
-                        .WithMany()
+                        .WithMany("PercentageBreakdown")
                         .HasForeignKey("accountID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
