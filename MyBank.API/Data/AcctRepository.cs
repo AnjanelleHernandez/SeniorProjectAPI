@@ -139,12 +139,13 @@ namespace MyBank.API.Data
             }
         }
 
-        public async Task DeleteSinglePercentage(int percentageID)
+        public async Task DeleteSinglePercentage(PercentageBreakdown percentageToDelete)
         {
-            var percentToDelete = await FindPercentBreakdown(percentageID);
-            _context.PercentageBreakdowns.Remove(percentToDelete);
-            Account acctToUpdate = await FindAccount(percentToDelete.accountID);
-            acctToUpdate.accountPercent += (percentToDelete.PercentageAmount / 100);
+        //add the set aside percentage back to the total percentage.
+            Account acctToUpdate = await FindAccount(percentageToDelete.accountID);
+            acctToUpdate.accountPercent += (percentageToDelete.PercentageAmount / 100);
+        //remove the set aside percentage from the database.
+            _context.PercentageBreakdowns.Remove(percentageToDelete);
             await _context.SaveChangesAsync();
         }
 
