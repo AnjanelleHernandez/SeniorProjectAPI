@@ -155,6 +155,27 @@ namespace MyBank.API.Controllers
             return Ok(201);
         }
 
+        [HttpPost("create-set-amount")]
+        public async Task<IActionResult> CreateSetAmount(SetAmountCreationDto newSetAmount)
+        {
+        //Check first if the account belongs to the current user logged in.
+        //find the account that is requesting the change.
+            var foundAccount = await _repo.FindAccount(newSetAmount.accountID); 
+        //get the user id from the JWT.
+            var identity = User.FindFirst(ClaimTypes.NameIdentifier); 
+            if(identity == null)
+            {
+                return NotFound();
+            }
+            var claimID = identity.Value;
+        //check that the id from the JWT matches the user id of the account requesting the change.
+            if(foundAccount.userID != int.Parse(claimID)) 
+            {
+                return Unauthorized();
+            }
+            return Ok(201);
+        }
+
         [HttpPost("add-funds")]
         public async Task<IActionResult> AddFunds(AddFundsToAccountDto fundsToAdd)
         {
@@ -191,6 +212,10 @@ namespace MyBank.API.Controllers
         {
         //make sure the account that the user is attempting to alter belongs to that user.
             var foundAccount = await _repo.FindAccount(fundsToBeRemoved.accountID);
+            if(foundAccount == null)
+            {
+                return NotFound();
+            }
             var identity = User.FindFirst(ClaimTypes.NameIdentifier);
             decimal newTotal = 0.00m;
             if(identity == null)
@@ -269,7 +294,7 @@ namespace MyBank.API.Controllers
                 return Unauthorized();
             }
         //delete the requested percentage
-            await _repo.DeletePercentageBreakdowns(percentageToDelete.percentID);
+            await _repo.DeleteSinglePercentage(foundPercent);
             return Ok(200);
         }
     }

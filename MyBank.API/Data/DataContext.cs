@@ -12,5 +12,6 @@ namespace MyBank.API.Data
         public DbSet<Account> Accounts { get; set; }
         public DbSet<TransactionHistory> TransactionHistories { get; set; }
         public DbSet<PercentageBreakdown> PercentageBreakdowns { get; set; }
+        public DbSet<SetAmount> SetAmounts { get; set; }
     }
 }

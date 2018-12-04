@@ -23,5 +23,6 @@ namespace MyBank.API.Data
         Task DeleteTransactionHistory(int accountID);
         Task DeletePercentageBreakdowns(int accountID);
         Task<PercentageBreakdown> FindPercentBreakdown(int percentID);
+        Task DeleteSinglePercentage(PercentageBreakdown percentageToDelete);
     }
 }
