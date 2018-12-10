@@ -142,7 +142,7 @@ namespace MyBank.API.Controllers
         //if account's percentage can be updated, add newPercent to the table. 
             else
             {
-                decimal newPercentageTotal = foundAccount.accountTotal * (newPercentage.percentageAmount/100);
+                decimal newPercentageTotal = Math.Round(foundAccount.accountTotal * (newPercentage.percentageAmount/100),2);
                 var newPercent = new PercentageBreakdown
                 {
                     accountID = newPercentage.accountID,

@@ -156,7 +156,7 @@ namespace MyBank.API.Data
         }
         private async Task RecalculatePercentages(PercentageBreakdown breakdownToUpdate, decimal newAccountTotal)
         {
-            breakdownToUpdate.PercentageTotal = newAccountTotal * (breakdownToUpdate.PercentageAmount / 100);
+            breakdownToUpdate.PercentageTotal = Math.Round(newAccountTotal * (breakdownToUpdate.PercentageAmount / 100), 2);
             await _context.SaveChangesAsync();
         }
     }
